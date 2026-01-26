@@ -1,0 +1,105 @@
+---
+title: "Day 1 Notebook - YaojunLiu"
+author: "YaojunLiu"
+date: "2026-01-25"
+output: html_document
+---
+
+## Today's Tasks
+
+- [x] Research API options for gold ETF data
+- [x] Design api.R core structure
+- [x] Create initial api.R with placeholder functions
+- [x] Document Twelve Data API endpoints
+
+## Work Summary
+
+### Completed Work
+
+Today I researched various financial data APIs and designed the core API module for our package. After comparing Alpha Vantage, Yahoo Finance, and Twelve Data, we decided to use Twelve Data due to its generous free tier (800 calls/day) and comprehensive documentation.
+
+I created the initial `api.R` file with the basic structure for API communication.
+
+### API Research
+
+| API Provider | Free Tier | Pros | Cons |
+|--------------|-----------|------|------|
+| Alpha Vantage | 5 calls/min | Well documented | Rate limit too low |
+| Yahoo Finance | Unlimited | No key needed | Unofficial, unstable |
+| Twelve Data | 800/day | Good docs, reliable | Daily limit |
+
+**Decision**: Twelve Data - best balance of reliability and free tier limits.
+
+### Code Created
+
+**R/api.R (initial version):**
+```r
+#' API Configuration and Helper Functions
+#'
+#' Internal functions for API communication.
+#'
+#' @name api
+#' @keywords internal
+NULL
+
+#' Base URL for the API
+#' @noRd
+.api_base_url <- function() {
+  # Placeholder - will update to Twelve Data URL
+  getOption("rGoldETF.api_url", default = "https://api.example.com")
+}
+
+#' Get API key from environment
+#' @noRd
+.get_api_key <- function() {
+  key <- Sys.getenv("GOLD_ETF_API_KEY")
+  if (key == "") {
+    stop("API key not found. Set GOLD_ETF_API_KEY environment variable.")
+  }
+  key
+}
+
+#' Make API request (placeholder)
+#'
+#' @param endpoint API endpoint
+#' @param params Query parameters
+#' @return Parsed JSON response
+#' @noRd
+.api_request <- function(endpoint, params = list()) {
+  # TODO: Implement actual API call
+  # Will use httr::GET with Twelve Data authentication
+  url <- paste0(.api_base_url(), "/", endpoint)
+
+  # Placeholder - actual implementation tomorrow
+  stop("API request not yet implemented")
+}
+```
+
+### Twelve Data API Documentation
+
+**Base URL**: `https://api.twelvedata.com`
+
+**Authentication**: API key as query parameter (`apikey=YOUR_KEY`)
+
+**Key Endpoints**:
+- `/quote` - Real-time quote
+- `/time_series` - Historical OHLCV data
+- `/exchange_rate` - For XAU/USD gold spot
+- `/symbol_search` - Search symbols
+- `/market_state` - Market open/close status
+
+### Issues Encountered
+
+1. **API key storage**: Debated between environment variable vs. options. Chose environment variable for security (not saved in .Rhistory).
+
+### Decision Log
+
+1. **API choice**: Twelve Data for reliability and free tier
+2. **Authentication method**: Query parameter (Twelve Data style)
+3. **Environment variable name**: `GOLD_ETF_API_KEY` (will change to `TWELVE_DATA_API_KEY` later)
+
+## Tomorrow's Plan
+
+- Implement actual `.api_request()` function with httr
+- Implement `get_gld_history()` function
+- Test API connection with real key
