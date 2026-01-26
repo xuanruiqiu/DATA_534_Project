@@ -1,0 +1,94 @@
+---
+title: "Day 1 Notebook - XuanruiQiu"
+author: "XuanruiQiu"
+date: "2026-01-25"
+output: html_document
+---
+
+## Today's Tasks
+
+- [x] Create R package skeleton using devtools
+- [x] Set up DESCRIPTION file with package metadata
+- [x] Create zzz.R for package initialization
+- [x] Coordinate with team on API selection
+
+## Work Summary
+
+### Completed Work
+
+Today I initialized the rGoldETF package structure. I used `devtools::create()` to generate the basic package skeleton, then configured the DESCRIPTION file with our team information and package dependencies.
+
+I also created the `zzz.R` file which handles package loading and sets default options.
+
+### Code Created
+
+**DESCRIPTION file:**
+```
+Package: rGoldETF
+Title: Gold ETF Data Analysis and Visualization
+Version: 0.1.0
+Authors@R: c(
+    person("Xuanrui", "Qiu", email = "xuanrui@example.com", role = c("aut", "cre")),
+    person("Yaojun", "Liu", email = "yaojun@example.com", role = "aut"),
+    person("Ruochen", "Yang", email = "ruochen@example.com", role = "aut")
+)
+Description: Provides functions to retrieve, analyze, and visualize Gold ETF data.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
+Imports:
+    httr,
+    jsonlite,
+    ggplot2
+Suggests:
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+```
+
+**R/zzz.R (initial version):**
+```r
+#' @keywords internal
+"_PACKAGE"
+
+.onLoad <- function(libname, pkgname) {
+
+  # Set default options - placeholder URL for now
+  op <- options()
+  op.rGoldETF <- list(
+    rGoldETF.api_url = "https://api.example.com"
+  )
+  toset <- !(names(op.rGoldETF) %in% names(op))
+  if (any(toset)) options(op.rGoldETF[toset])
+
+  invisible()
+}
+
+.onAttach <- function(libname, pkgname) {
+  packageStartupMessage("rGoldETF: Gold ETF Data Analysis and Visualization")
+  packageStartupMessage("Set your API key with: Sys.setenv(GOLD_ETF_API_KEY = 'your_key')")
+}
+```
+
+### Team Meeting Notes
+
+- Discussed API options: Alpha Vantage, Yahoo Finance, Twelve Data
+- YaojunLiu will research API endpoints and authentication
+- RuochenYang will set up the testing framework
+- Decided to use Twelve Data API (free tier: 800 calls/day)
+
+### Issues Encountered
+
+No major issues today. Package creation went smoothly.
+
+### Decision Log
+
+1. **Package name**: rGoldETF - clear and descriptive
+2. **Dependencies**: httr for API calls, jsonlite for JSON parsing, ggplot2 for visualization
+3. **API choice**: Twelve Data (pending final confirmation from YaojunLiu)
+
+## Tomorrow's Plan
+
+- Implement `get_gld_price()` function
+- Work with YaojunLiu to finalize API integration
+- Review RuochenYang's test framework

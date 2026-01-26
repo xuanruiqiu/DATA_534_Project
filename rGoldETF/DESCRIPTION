@@ -1,0 +1,27 @@
+Package: rGoldETF
+Title: Gold ETF Data Analysis and Visualization
+Version: 0.1.0
+Authors@R: c(
+    person("Xuanrui", "Qiu", email = "xuanrui.qiu@example.com", role = c("aut", "cre")),
+    person("Yaojun", "Liu", email = "yaojun.liu@example.com", role = "aut"),
+    person("Ruochen", "Yang", email = "ruochen.yang@example.com", role = "aut")
+    )
+Description: Provides tools for fetching, analyzing, and visualizing Gold ETF (GLD)
+    data. Includes functions for retrieving price data, calculating technical
+    indicators, analyzing options chains, and creating visualizations.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
+Imports:
+    httr,
+    jsonlite,
+    ggplot2,
+    dplyr,
+    lubridate
+Suggests:
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown
+Config/testthat/edition: 3
+VignetteBuilder: knitr
