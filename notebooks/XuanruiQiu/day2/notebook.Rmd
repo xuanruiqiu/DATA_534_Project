@@ -1,0 +1,102 @@
+---
+title: "Day 2 Notebook - XuanruiQiu"
+author: "XuanruiQiu"
+date: "2026-01-26"
+output: html_document
+---
+
+## Today's Tasks
+
+- [x] Implement `get_gld_price()` function
+- [x] Integrate with YaojunLiu's API framework
+- [x] Add response transformation for Twelve Data format
+- [x] Test basic functionality
+
+## Work Summary
+
+### Completed Work
+
+Today I implemented the `get_gld_price()` function that retrieves real-time GLD ETF prices from the Twelve Data API. I worked closely with YaojunLiu who provided the core API request function.
+
+The main challenge was transforming the Twelve Data response format into our standardized output structure.
+
+### Code Created
+
+**R/price.R (get_gld_price function):**
+```r
+#' Get Current GLD Price
+#'
+#' Retrieves the current price of the GLD ETF from Twelve Data API.
+#'
+#' @return A list containing current price information including:
+#'   \item{symbol}{The ticker symbol (GLD)}
+#'   \item{name}{ETF name}
+#'   \item{price}{Current price}
+#'   \item{change}{Price change}
+#'   \item{change_percent}{Percentage change}
+#'   \item{volume}{Trading volume}
+#'   \item{timestamp}{Time of the quote}
+#'
+#' @export
+#' @examples
+#' \dontrun{
+#' price <- get_gld_price()
+#' print(price$price)
+#' }
+get_gld_price <- function() {
+  response <- .api_request("quote", params = list(symbol = "GLD"))
+
+  # Transform Twelve Data response to standardized format
+  list(
+    symbol = response$symbol,
+    name = response$name,
+    price = as.numeric(response$close),
+    change = as.numeric(response$change),
+    change_percent = as.numeric(response$percent_change),
+    volume = as.numeric(response$volume),
+    timestamp = as.POSIXct(as.numeric(response$timestamp), origin = "1970-01-01")
+  )
+}
+```
+
+### Twelve Data Response Format
+
+The `/quote` endpoint returns:
+```json
+{
+  "symbol": "GLD",
+  "name": "SPDR Gold Shares",
+  "exchange": "NYSE",
+  "close": "185.50",
+  "change": "1.25",
+  "percent_change": "0.68",
+  "volume": "5000000",
+  "timestamp": 1705344000
+}
+```
+
+Note: All numeric values come as strings, so we need `as.numeric()` conversion.
+
+### Integration with YaojunLiu's API Code
+
+YaojunLiu completed the `.api_request()` function today. I integrated it by:
+1. Calling `.api_request("quote", params = list(symbol = "GLD"))`
+2. The API key is automatically added by his function
+3. Error handling is done at the API layer
+
+### Issues Encountered
+
+1. **Timestamp conversion**: Initially forgot that Twelve Data returns Unix timestamp as a number, not ISO string. Fixed by using `as.POSIXct()` with `origin` parameter.
+
+2. **Numeric conversion**: All values from API are strings. Added `as.numeric()` for all price/volume fields.
+
+### Decision Log
+
+1. **Return type**: Decided to return a list instead of data.frame for single quote - more intuitive for users
+2. **Field naming**: Used snake_case for consistency (change_percent instead of changePercent)
+
+## Tomorrow's Plan
+
+- Start implementing technical indicators (SMA, EMA)
+- Coordinate with YaojunLiu on `get_gld_history()` output format
+- Review RuochenYang's price function tests
