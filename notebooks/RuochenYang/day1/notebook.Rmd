@@ -1,0 +1,131 @@
+---
+title: "Day 1 Notebook - RuochenYang"
+author: "RuochenYang"
+date: "2026-01-25"
+output: html_document
+---
+
+## Today's Tasks
+
+- [x] Set up testthat testing framework
+- [x] Create test directory structure
+- [x] Write initial API configuration tests
+- [x] Create mock response helper functions
+
+## Work Summary
+
+### Completed Work
+
+Today I set up the testing infrastructure for the rGoldETF package. I configured testthat (version 3) and created the initial test file for API configuration tests.
+
+### Test Framework Setup
+
+**tests/testthat.R:**
+```r
+library(testthat)
+library(rGoldETF)
+
+test_check("rGoldETF")
+```
+
+**Directory Structure:**
+```
+tests/
+├── testthat.R
+└── testthat/
+    └── test-day1-api.R
+```
+
+### Code Created
+
+**tests/testthat/test-day1-api.R:**
+```r
+# Day 1 Tests - API Foundation Tests and Test Framework Setup
+
+# ============================================================================
+# Test Helper Functions and Mock Data
+# ============================================================================
+
+#' Create Mock API Response
+mock_api_response <- function(data, status_code = 200) {
+  structure(
+    list(
+      content = charToRaw(jsonlite::toJSON(data)),
+      status_code = status_code
+    ),
+    class = "response"
+  )
+}
+
+# ============================================================================
+# API Configuration Tests
+# ============================================================================
+
+test_that("API base URL can be configured via options", {
+  # Save original setting
+  old_url <- getOption("rGoldETF.api_url")
+
+  # Set new URL
+  options(rGoldETF.api_url = "https://custom.api.com")
+  expect_equal(getOption("rGoldETF.api_url"), "https://custom.api.com")
+
+  # Restore original setting
+  options(rGoldETF.api_url = old_url)
+})
+
+test_that("Missing API key throws error", {
+  # Save original key
+  old_key <- Sys.getenv("GOLD_ETF_API_KEY")
+
+  # Clear API key
+  Sys.setenv(GOLD_ETF_API_KEY = "")
+
+  expect_error(
+    rGoldETF:::.get_api_key(),
+    "API key not found"
+  )
+
+  # Restore original key
+  Sys.setenv(GOLD_ETF_API_KEY = old_key)
+})
+
+test_that("API key is returned correctly when present", {
+  old_key <- Sys.getenv("GOLD_ETF_API_KEY")
+  Sys.setenv(GOLD_ETF_API_KEY = "test_api_key_12345")
+
+  expect_equal(rGoldETF:::.get_api_key(), "test_api_key_12345")
+
+  Sys.setenv(GOLD_ETF_API_KEY = old_key)
+})
+
+# ============================================================================
+# Package Load Tests
+# ============================================================================
+
+test_that("Package sets default options on load", {
+  expect_true(!is.null(getOption("rGoldETF.api_url")))
+})
+```
+
+### Testing Strategy
+
+1. **Unit Tests**: Test individual functions in isolation
+2. **Integration Tests**: Test function interactions
+3. **Mock Data**: Use mock responses to avoid API calls during testing
+4. **Environment Isolation**: Save/restore environment variables in each test
+
+### Issues Encountered
+
+1. **Environment variable cleanup**: Initially forgot to restore original API key after tests. Added save/restore pattern to all tests.
+
+### Decision Log
+
+1. **testthat version**: Using testthat 3.0+ for modern test syntax
+2. **Test file naming**: `test-dayN-*.R` pattern to match development days
+3. **Mock strategy**: Create helper functions for mock responses
+
+## Tomorrow's Plan
+
+- Write tests for `get_gld_price()` (XuanruiQiu's function)
+- Write tests for `get_gld_history()` (YaojunLiu's function)
+- Add mock data for Twelve Data response format
