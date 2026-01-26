@@ -1,0 +1,212 @@
+---
+title: "Day 2 Notebook - YaojunLiu"
+author: "YaojunLiu"
+date: "2026-01-26"
+output: html_document
+---
+
+## Today's Tasks
+
+- [x] Implement `.api_request()` function with httr
+- [x] Implement `get_gld_history()` function
+- [x] Add Twelve Data error handling
+- [x] Test with real API key
+
+## Work Summary
+
+### Completed Work
+
+Today I completed the core API functionality. The `.api_request()` function now properly communicates with Twelve Data API, and I implemented `get_gld_history()` for retrieving historical price data.
+
+XuanruiQiu used my API function to implement `get_gld_price()` - our collaboration is working well!
+
+### Code Created
+
+**R/api.R (updated with full implementation):**
+```r
+#' API Configuration and Helper Functions
+#'
+#' Internal functions for API communication with Twelve Data.
+#'
+#' @name api
+#' @keywords internal
+NULL
+
+#' Base URL for the Twelve Data API
+#' @noRd
+.api_base_url <- function() {
+  getOption("rGoldETF.api_url", default = "https://api.twelvedata.com")
+}
+
+#' Get API key from environment
+#' @noRd
+.get_api_key <- function() {
+  key <- Sys.getenv("TWELVE_DATA_API_KEY")
+  if (key == "") {
+    stop("API key not found. Set TWELVE_DATA_API_KEY environment variable.")
+  }
+  key
+}
+
+#' Make API request to Twelve Data
+#'
+#' @param endpoint API endpoint
+#' @param params Query parameters
+#' @return Parsed JSON response
+#' @noRd
+.api_request <- function(endpoint, params = list()) {
+  url <- paste0(.api_base_url(), "/", endpoint)
+
+  # Twelve Data uses apikey as query parameter
+  params$apikey <- .get_api_key()
+
+  response <- httr::GET(
+    url,
+    query = params,
+    httr::add_headers(
+      "Content-Type" = "application/json"
+    )
+  )
+
+  if (httr::http_error(response)) {
+    stop("API request failed: ", httr::status_code(response))
+  }
+
+  result <- jsonlite::fromJSON(httr::content(response, "text", encoding = "UTF-8"))
+
+  # Check for Twelve Data API errors
+  if (!is.null(result$status) && result$status == "error") {
+    stop("Twelve Data API error: ", result$message)
+  }
+
+  result
+}
+```
+
+**R/price.R (get_gld_history function):**
+```r
+#' Get Historical GLD Data
+#'
+#' Retrieves historical price data for the GLD ETF from Twelve Data API.
+#'
+#' @param start_date Start date in "YYYY-MM-DD" format
+#' @param end_date End date in "YYYY-MM-DD" format
+#' @param interval Data interval: "1day" (daily), "1week" (weekly), "1month" (monthly)
+#'
+#' @return A data frame containing historical price data
+#'
+#' @export
+get_gld_history <- function(start_date, end_date, interval = "1day") {
+  # Validate dates
+  start <- as.Date(start_date)
+  end <- as.Date(end_date)
+
+  if (start > end) {
+    stop("start_date must be before end_date")
+  }
+
+  # Map interval to Twelve Data format
+  interval_map <- c("1d" = "1day", "1wk" = "1week", "1mo" = "1month")
+  if (interval %in% names(interval_map)) {
+    interval <- interval_map[interval]
+  }
+
+  response <- .api_request("time_series", params = list(
+    symbol = "GLD",
+    start_date = start_date,
+    end_date = end_date,
+    interval = interval
+  ))
+
+  # Transform Twelve Data response to data frame
+  if (is.null(response$values) || length(response$values) == 0) {
+    return(data.frame(
+      date = as.Date(character()),
+      open = numeric(),
+      high = numeric(),
+      low = numeric(),
+      close = numeric(),
+      volume = numeric()
+    ))
+  }
+
+  data <- response$values
+  result <- data.frame(
+    date = as.Date(data$datetime),
+    open = as.numeric(data$open),
+    high = as.numeric(data$high),
+    low = as.numeric(data$low),
+    close = as.numeric(data$close),
+    volume = as.numeric(data$volume),
+    stringsAsFactors = FALSE
+  )
+
+  # Sort by date ascending
+  result <- result[order(result$date), ]
+  rownames(result) <- NULL
+
+  result
+}
+```
+
+### API Testing
+
+```r
+# Test with real API key
+Sys.setenv(TWELVE_DATA_API_KEY = "my_test_key")
+
+# Test history function
+history <- get_gld_history("2024-01-01", "2024-01-15")
+head(history)
+#         date   open   high    low  close   volume
+# 1 2024-01-02 189.50 190.25 188.75 189.80  4523100
+# 2 2024-01-03 189.80 190.50 189.00 189.25  3892000
+# ...
+```
+
+### Twelve Data Response Format
+
+The `/time_series` endpoint returns:
+```json
+{
+  "meta": {
+    "symbol": "GLD",
+    "interval": "1day",
+    "currency": "USD"
+  },
+  "values": [
+    {
+      "datetime": "2024-01-15",
+      "open": "189.50",
+      "high": "190.25",
+      "low": "188.75",
+      "close": "189.80",
+      "volume": "4523100"
+    },
+    ...
+  ]
+}
+```
+
+Note: Data comes in reverse chronological order, so we sort ascending.
+
+### Issues Encountered
+
+1. **Date order**: Twelve Data returns newest first. Added sorting to return oldest first (more intuitive for time series analysis).
+
+2. **Empty response handling**: Added check for empty `values` array to return empty data frame gracefully.
+
+3. **Interval mapping**: Users might use "1d" (common) instead of "1day" (Twelve Data format). Added mapping for convenience.
+
+### Decision Log
+
+1. **Environment variable rename**: Changed from `GOLD_ETF_API_KEY` to `TWELVE_DATA_API_KEY` for clarity
+2. **Date sorting**: Return data in ascending order (oldest first)
+3. **Interval flexibility**: Accept both "1d" and "1day" formats
+
+## Tomorrow's Plan
+
+- Implement RSI indicator calculation
+- Implement MACD indicator calculation
+- Implement Bollinger Bands calculation
+- Coordinate with XuanruiQiu on technical.R structure
