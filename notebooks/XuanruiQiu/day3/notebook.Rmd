@@ -1,0 +1,122 @@
+---
+title: "Day 3 Notebook - XuanruiQiu"
+author: "XuanruiQiu"
+date: "2026-01-27"
+output: html_document
+---
+
+## Today's Tasks
+
+- [x] Implement Simple Moving Average (SMA) calculation
+- [x] Implement Exponential Moving Average (EMA) calculation
+- [x] Create `get_technical_indicators()` wrapper function
+- [x] Coordinate with YaojunLiu on RSI/MACD implementation
+
+## Work Summary
+
+### Completed Work
+
+Today I focused on implementing the first two technical indicators: SMA and EMA. These are foundational indicators that many traders use. I also created the main wrapper function `get_technical_indicators()` that will eventually include all indicators.
+
+YaojunLiu is working on RSI, MACD, and Bollinger Bands in parallel.
+
+### Code Created
+
+**R/technical.R (SMA and EMA):**
+```r
+#' Get Technical Indicators
+#'
+#' Calculates technical indicators for GLD price data.
+#'
+#' @param data A data frame with historical price data (from get_gld_history)
+#' @param indicators Character vector of indicators to calculate.
+#'   Options: "sma", "ema" (more coming soon)
+#' @param periods Named list of periods for each indicator
+#'
+#' @return A data frame with the original data plus calculated indicators
+#'
+#' @export
+get_technical_indicators <- function(data,
+                                     indicators = c("sma", "ema"),
+                                     periods = list(sma = 20, ema = 12)) {
+  result <- data
+
+  if ("sma" %in% indicators) {
+    result$sma <- .calculate_sma(data$close, periods$sma)
+  }
+
+  if ("ema" %in% indicators) {
+    result$ema <- .calculate_ema(data$close, periods$ema)
+  }
+
+  # RSI, MACD, Bollinger will be added by YaojunLiu
+
+  result
+}
+
+#' Calculate Simple Moving Average
+#' @noRd
+.calculate_sma <- function(x, n) {
+  stats::filter(x, rep(1/n, n), sides = 1)
+}
+
+#' Calculate Exponential Moving Average
+#' @noRd
+.calculate_ema <- function(x, n) {
+  alpha <- 2 / (n + 1)
+  ema <- numeric(length(x))
+  ema[1] <- x[1]
+  for (i in 2:length(x)) {
+    ema[i] <- alpha * x[i] + (1 - alpha) * ema[i-1]
+  }
+  ema
+}
+```
+
+### Algorithm Details
+
+**SMA (Simple Moving Average):**
+- Uses `stats::filter()` with equal weights
+- `sides = 1` means we only look at past values (not future)
+- First n-1 values will be NA
+
+**EMA (Exponential Moving Average):**
+- Smoothing factor: α = 2 / (n + 1)
+- Formula: EMA_t = α × Price_t + (1 - α) × EMA_{t-1}
+- First value initialized to first price
+- More responsive to recent price changes than SMA
+
+### Testing
+
+```r
+# Quick test with mock data
+test_data <- data.frame(
+  date = seq.Date(as.Date("2024-01-01"), by = "day", length.out = 30),
+  close = 180 + cumsum(rnorm(30, 0, 1))
+)
+
+result <- get_technical_indicators(test_data, c("sma", "ema"), list(sma = 5, ema = 5))
+head(result)
+#   date     close      sma      ema
+# 1 2024-01-01 180.2       NA   180.2
+# 2 2024-01-02 181.5       NA   180.6
+# ...
+```
+
+### Issues Encountered
+
+1. **NA handling in SMA**: The `stats::filter()` function naturally produces NA for the first n-1 values, which is correct behavior.
+
+2. **EMA initialization**: Debated whether to initialize EMA with first price or SMA of first n values. Chose first price for simplicity.
+
+### Decision Log
+
+1. **Local calculation vs API**: Decided to calculate indicators locally instead of using Twelve Data's indicator endpoints. This saves API calls and works offline.
+
+2. **Default periods**: SMA default = 20 (standard), EMA default = 12 (common for MACD)
+
+## Tomorrow's Plan
+
+- Start implementing `plot_gld_chart()` visualization
+- Integrate YaojunLiu's RSI/MACD/Bollinger code
+- Review RuochenYang's technical indicator tests
