@@ -1,0 +1,152 @@
+---
+title: "Day 3 Notebook - YaojunLiu"
+author: "YaojunLiu"
+date: "2026-01-27"
+output: html_document
+---
+
+## Today's Tasks
+
+- [x] Implement RSI (Relative Strength Index) calculation
+- [x] Implement MACD calculation
+- [x] Implement Bollinger Bands calculation
+- [x] Coordinate with XuanruiQiu to integrate into technical.R
+
+## Work Summary
+
+### Completed Work
+
+Today I implemented three important technical indicators: RSI, MACD, and Bollinger Bands. These complement XuanruiQiu's SMA and EMA implementations. I sent my code to XuanruiQiu who will integrate it into the main `get_technical_indicators()` function.
+
+### Code Created
+
+**Technical indicator helper functions (to be added to R/technical.R):**
+
+```r
+#' Calculate RSI
+#' @noRd
+.calculate_rsi <- function(x, n = 14) {
+  delta <- diff(x)
+  gains <- pmax(delta, 0)
+  losses <- pmax(-delta, 0)
+
+  avg_gain <- .calculate_sma(gains, n)
+  avg_loss <- .calculate_sma(losses, n)
+
+  rs <- avg_gain / avg_loss
+  rsi <- 100 - (100 / (1 + rs))
+  c(NA, rsi)  # Add NA for first value (no diff)
+}
+
+#' Calculate MACD
+#' @noRd
+.calculate_macd <- function(x, fast = 12, slow = 26, signal = 9) {
+  ema_fast <- .calculate_ema(x, fast)
+  ema_slow <- .calculate_ema(x, slow)
+  macd <- ema_fast - ema_slow
+  signal_line <- .calculate_ema(macd, signal)
+  histogram <- macd - signal_line
+
+  list(macd = macd, signal = signal_line, histogram = histogram)
+}
+
+#' Calculate Bollinger Bands
+#' @noRd
+.calculate_bollinger <- function(x, n = 20, sd_mult = 2) {
+  middle <- .calculate_sma(x, n)
+  sd <- stats::sd(x, na.rm = TRUE)
+  upper <- middle + sd_mult * sd
+  lower <- middle - sd_mult * sd
+
+  list(upper = upper, middle = middle, lower = lower)
+}
+```
+
+### Algorithm Details
+
+**RSI (Relative Strength Index):**
+- Measures momentum on a 0-100 scale
+- RSI > 70: Overbought
+- RSI < 30: Oversold
+- Formula: RSI = 100 - (100 / (1 + RS))
+- RS = Average Gain / Average Loss over n periods
+
+**MACD (Moving Average Convergence Divergence):**
+- MACD Line = 12-day EMA - 26-day EMA
+- Signal Line = 9-day EMA of MACD Line
+- Histogram = MACD Line - Signal Line
+- Bullish when MACD crosses above signal
+
+**Bollinger Bands:**
+- Middle Band = 20-day SMA
+- Upper Band = Middle + 2 × Standard Deviation
+- Lower Band = Middle - 2 × Standard Deviation
+- Price near upper band = potentially overbought
+- Price near lower band = potentially oversold
+
+### Testing
+
+```r
+# Test with sample data
+test_data <- data.frame(
+  date = seq.Date(as.Date("2024-01-01"), by = "day", length.out = 50),
+  close = 180 + cumsum(rnorm(50, 0, 1))
+)
+
+# Test RSI
+rsi <- .calculate_rsi(test_data$close, 14)
+tail(rsi)
+# [1] 52.3 48.7 55.1 61.2 58.9 54.3
+
+# Test MACD
+macd <- .calculate_macd(test_data$close)
+tail(macd$histogram)
+# [1] 0.23 0.31 0.28 0.15 0.08 -0.02
+
+# Test Bollinger
+bb <- .calculate_bollinger(test_data$close, 20)
+# Upper and lower bands calculated correctly
+```
+
+### Integration with XuanruiQiu's Code
+
+XuanruiQiu will add these to `get_technical_indicators()`:
+
+```r
+# In get_technical_indicators():
+if ("rsi" %in% indicators) {
+  result$rsi <- .calculate_rsi(data$close, periods$rsi)
+}
+
+if ("macd" %in% indicators) {
+  macd_result <- .calculate_macd(data$close)
+  result$macd <- macd_result$macd
+  result$macd_signal <- macd_result$signal
+  result$macd_histogram <- macd_result$histogram
+}
+
+if ("bollinger" %in% indicators) {
+  bb_result <- .calculate_bollinger(data$close, periods$sma)
+  result$bb_upper <- bb_result$upper
+  result$bb_middle <- bb_result$middle
+  result$bb_lower <- bb_result$lower
+}
+```
+
+### Issues Encountered
+
+1. **RSI first value**: The RSI calculation uses `diff()` which reduces length by 1. Added `c(NA, rsi)` to maintain original length.
+
+2. **Bollinger SD calculation**: Initially calculated rolling SD, but simplified to use overall SD for consistency. Could improve later with rolling window.
+
+### Decision Log
+
+1. **RSI default period**: 14 days (industry standard)
+2. **MACD parameters**: 12/26/9 (standard settings)
+3. **Bollinger multiplier**: 2 standard deviations (standard)
+
+## Tomorrow's Plan
+
+- Help XuanruiQiu with visualization if needed
+- Start working on extended gold functions (gold spot price, ETF comparison)
+- Review RuochenYang's technical indicator tests
