@@ -1,0 +1,165 @@
+---
+title: "Day 4 Notebook - XuanruiQiu"
+author: "XuanruiQiu"
+date: "2026-01-28"
+output: html_document
+---
+
+## Today's Tasks
+
+- [x] Implement `plot_gld_chart()` function
+- [x] Support line chart and candlestick chart types
+- [x] Add technical indicator overlay support
+- [x] Integrate YaojunLiu's RSI/MACD/Bollinger code into technical.R
+
+## Work Summary
+
+### Completed Work
+
+Today I implemented the main visualization function `plot_gld_chart()`. This function creates price charts using ggplot2 and supports both line charts and candlestick charts. It can also overlay technical indicators.
+
+I also integrated YaojunLiu's RSI, MACD, and Bollinger Bands code into the `get_technical_indicators()` function.
+
+### Code Created
+
+**R/visualization.R:**
+```r
+#' Plot GLD Price Chart
+#'
+#' Creates a price chart for GLD ETF data.
+#'
+#' @param data A data frame with price data (from get_gld_history)
+#' @param type Chart type: "line" or "candlestick"
+#' @param indicators Character vector of indicators to overlay (requires pre-calculated)
+#' @param title Chart title
+#'
+#' @return A ggplot object
+#'
+#' @export
+#' @import ggplot2
+plot_gld_chart <- function(data,
+                           type = "line",
+                           indicators = NULL,
+                           title = "GLD Price Chart") {
+
+  # Base plot
+  p <- ggplot(data, aes(x = date))
+
+  if (type == "line") {
+    p <- p + geom_line(aes(y = close), color = "steelblue", linewidth = 0.8)
+  } else if (type == "candlestick") {
+    # Candlestick chart
+    data$direction <- ifelse(data$close >= data$open, "up", "down")
+
+    p <- p +
+      geom_segment(aes(x = date, xend = date, y = low, yend = high)) +
+      geom_rect(aes(
+        xmin = date - 0.3,
+        xmax = date + 0.3,
+        ymin = pmin(open, close),
+        ymax = pmax(open, close),
+        fill = direction
+      )) +
+      scale_fill_manual(values = c("up" = "green", "down" = "red"), guide = "none")
+  }
+
+  # Add indicators if specified
+  if (!is.null(indicators)) {
+    if ("sma" %in% indicators && "sma" %in% names(data)) {
+      p <- p + geom_line(aes(y = sma), color = "orange", linewidth = 0.6, na.rm = TRUE)
+    }
+    if ("ema" %in% indicators && "ema" %in% names(data)) {
+      p <- p + geom_line(aes(y = ema), color = "purple", linewidth = 0.6, na.rm = TRUE)
+    }
+    if ("bb_upper" %in% names(data) && "bollinger" %in% indicators) {
+      p <- p +
+        geom_line(aes(y = bb_upper), color = "gray", linetype = "dashed", na.rm = TRUE) +
+        geom_line(aes(y = bb_lower), color = "gray", linetype = "dashed", na.rm = TRUE)
+    }
+  }
+
+  # Styling
+  p <- p +
+    labs(
+      title = title,
+      x = "Date",
+      y = "Price (USD)"
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+      axis.text.x = element_text(angle = 45, hjust = 1)
+    )
+
+  p
+}
+```
+
+### Updated technical.R (integrated YaojunLiu's code)
+
+```r
+get_technical_indicators <- function(data,
+                                     indicators = c("sma", "ema", "rsi"),
+                                     periods = list(sma = 20, ema = 12, rsi = 14)) {
+  result <- data
+
+  if ("sma" %in% indicators) {
+    result$sma <- .calculate_sma(data$close, periods$sma)
+  }
+
+  if ("ema" %in% indicators) {
+    result$ema <- .calculate_ema(data$close, periods$ema)
+  }
+
+  # YaojunLiu's additions
+  if ("rsi" %in% indicators) {
+    result$rsi <- .calculate_rsi(data$close, periods$rsi)
+  }
+
+  if ("macd" %in% indicators) {
+    macd_result <- .calculate_macd(data$close)
+    result$macd <- macd_result$macd
+    result$macd_signal <- macd_result$signal
+    result$macd_histogram <- macd_result$histogram
+  }
+
+  if ("bollinger" %in% indicators) {
+    bb_result <- .calculate_bollinger(data$close, periods$sma)
+    result$bb_upper <- bb_result$upper
+    result$bb_middle <- bb_result$middle
+    result$bb_lower <- bb_result$lower
+  }
+
+  result
+}
+```
+
+### Chart Examples
+
+```r
+# Line chart with SMA
+history <- get_gld_history("2024-01-01", "2024-06-30")
+data <- get_technical_indicators(history, c("sma", "ema"))
+plot_gld_chart(data, type = "line", indicators = c("sma", "ema"))
+
+# Candlestick chart
+plot_gld_chart(history, type = "candlestick", title = "GLD Candlestick")
+```
+
+### Issues Encountered
+
+1. **Candlestick width**: Had to manually set rectangle width using `date - 0.3` and `date + 0.3`. This works for daily data but may need adjustment for other intervals.
+
+2. **NA values in indicators**: Added `na.rm = TRUE` to geom_line calls to avoid warnings about missing values at the start of indicator series.
+
+### Decision Log
+
+1. **ggplot2 vs plotly**: Chose ggplot2 for static charts. Can add plotly wrapper later for interactive charts.
+
+2. **Indicator colors**: Orange for SMA, Purple for EMA, Gray dashed for Bollinger Bands - standard conventions.
+
+## Tomorrow's Plan
+
+- Write package vignette with usage examples
+- Help RuochenYang with integration tests
+- Final code review and cleanup
