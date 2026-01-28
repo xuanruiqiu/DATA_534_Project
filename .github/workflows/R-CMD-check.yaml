@@ -38,4 +38,5 @@ jobs:
           upload-snapshots: true
           args: 'c("--no-manual", "--as-cran", "--no-tests")'
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
+          error-on: '"error"'
           working-directory: rGoldETF
