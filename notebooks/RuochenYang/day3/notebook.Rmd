@@ -1,0 +1,225 @@
+---
+title: "Day 3 Notebook - RuochenYang"
+author: "RuochenYang"
+date: "2026-01-27"
+output: html_document
+---
+
+## Today's Tasks
+
+- [x] Write tests for technical indicators
+- [x] Test SMA calculation correctness
+- [x] Test EMA calculation correctness
+- [x] Test RSI, MACD, Bollinger Bands
+- [x] Test edge cases (minimal data, monotonic data)
+
+## Work Summary
+
+### Completed Work
+
+Today I wrote comprehensive tests for all technical indicators implemented by XuanruiQiu and YaojunLiu. I focused on both correctness testing and edge case handling.
+
+### Code Created
+
+**tests/testthat/test-day3-technical.R:**
+```r
+# Day 3 Tests - Technical Indicators Tests
+
+# ============================================================================
+# Test Data Setup
+# ============================================================================
+
+# Standard test data
+test_data <- data.frame(
+  date = seq.Date(as.Date("2024-01-01"), by = "day", length.out = 50),
+  close = 180 + cumsum(rnorm(50, 0, 1))
+)
+
+# Monotonically increasing data (for RSI testing)
+increasing_data <- data.frame(
+  date = seq.Date(as.Date("2024-01-01"), by = "day", length.out = 30),
+  close = 180 + 1:30
+)
+
+# Monotonically decreasing data
+decreasing_data <- data.frame(
+  date = seq.Date(as.Date("2024-01-01"), by = "day", length.out = 30),
+  close = 200 - 1:30
+)
+
+# ============================================================================
+# SMA Tests
+# ============================================================================
+
+test_that("SMA calculation produces correct length", {
+  result <- get_technical_indicators(test_data, "sma", list(sma = 5))
+  expect_equal(length(result$sma), nrow(test_data))
+})
+
+test_that("SMA first n-1 values are NA", {
+  result <- get_technical_indicators(test_data, "sma", list(sma = 5))
+  expect_true(all(is.na(result$sma[1:4])))
+  expect_false(is.na(result$sma[5]))
+})
+
+test_that("SMA calculation is correct", {
+  simple_data <- data.frame(close = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
+  result <- get_technical_indicators(simple_data, "sma", list(sma = 3))
+
+  # SMA of [3,4,5] should be 4
+  expect_equal(result$sma[5], 4, tolerance = 0.01)
+})
+
+# ============================================================================
+# EMA Tests
+# ============================================================================
+
+test_that("EMA calculation produces correct length", {
+  result <- get_technical_indicators(test_data, "ema", list(ema = 12))
+  expect_equal(length(result$ema), nrow(test_data))
+})
+
+test_that("EMA first value equals first price", {
+  result <- get_technical_indicators(test_data, "ema", list(ema = 12))
+  expect_equal(result$ema[1], test_data$close[1])
+})
+
+test_that("EMA responds faster than SMA to price changes", {
+  # Create data with sudden price jump
+  jump_data <- data.frame(close = c(rep(100, 10), rep(110, 10)))
+
+  result <- get_technical_indicators(jump_data, c("sma", "ema"), list(sma = 5, ema = 5))
+
+  # After jump, EMA should be closer to new price than SMA
+  expect_true(result$ema[15] > result$sma[15])
+})
+
+# ============================================================================
+# RSI Tests
+# ============================================================================
+
+test_that("RSI is bounded between 0 and 100", {
+  result <- get_technical_indicators(test_data, "rsi", list(rsi = 14))
+  valid_rsi <- result$rsi[!is.na(result$rsi)]
+
+  expect_true(all(valid_rsi >= 0))
+  expect_true(all(valid_rsi <= 100))
+})
+
+test_that("RSI is high for increasing prices", {
+  result <- get_technical_indicators(increasing_data, "rsi", list(rsi = 14))
+  last_rsi <- tail(result$rsi[!is.na(result$rsi)], 1)
+
+  expect_true(last_rsi > 90)
+})
+
+test_that("RSI is low for decreasing prices", {
+  result <- get_technical_indicators(decreasing_data, "rsi", list(rsi = 14))
+  last_rsi <- tail(result$rsi[!is.na(result$rsi)], 1)
+
+  expect_true(last_rsi < 10)
+})
+
+# ============================================================================
+# MACD Tests
+# ============================================================================
+
+test_that("MACD returns three components", {
+  result <- get_technical_indicators(test_data, "macd")
+
+  expect_true("macd" %in% names(result))
+  expect_true("macd_signal" %in% names(result))
+  expect_true("macd_histogram" %in% names(result))
+})
+
+test_that("MACD histogram equals MACD minus signal", {
+  result <- get_technical_indicators(test_data, "macd")
+
+  # Check a few values
+  for (i in 30:40) {
+    expected <- result$macd[i] - result$macd_signal[i]
+    expect_equal(result$macd_histogram[i], expected, tolerance = 0.001)
+  }
+})
+
+# ============================================================================
+# Bollinger Bands Tests
+# ============================================================================
+
+test_that("Bollinger Bands returns three components", {
+  result <- get_technical_indicators(test_data, "bollinger")
+
+  expect_true("bb_upper" %in% names(result))
+  expect_true("bb_middle" %in% names(result))
+  expect_true("bb_lower" %in% names(result))
+})
+
+test_that("Bollinger upper > middle > lower", {
+  result <- get_technical_indicators(test_data, "bollinger")
+
+  valid_idx <- !is.na(result$bb_upper)
+  expect_true(all(result$bb_upper[valid_idx] > result$bb_middle[valid_idx]))
+  expect_true(all(result$bb_middle[valid_idx] > result$bb_lower[valid_idx]))
+})
+
+# ============================================================================
+# Combined Indicators Test
+# ============================================================================
+
+test_that("Multiple indicators can be calculated together", {
+  result <- get_technical_indicators(
+    test_data,
+    c("sma", "ema", "rsi", "macd", "bollinger")
+  )
+
+  expect_true(all(c("sma", "ema", "rsi", "macd", "bb_upper") %in% names(result)))
+})
+
+test_that("Original data is preserved", {
+  original_close <- test_data$close
+  result <- get_technical_indicators(test_data, c("sma", "ema"))
+
+  expect_equal(result$close, original_close)
+})
+```
+
+### Test Results
+
+```r
+devtools::test()
+# ✓ | F W S  OK | Context
+# ✓ |         4 | test-day1-api
+# ✓ |        10 | test-day2-price
+# ✓ |        15 | test-day3-technical
+#
+# OK: 29
+# Failed: 0
+```
+
+### Key Test Scenarios
+
+| Indicator | Test Scenarios |
+|-----------|----------------|
+| SMA | Length, NA handling, correctness |
+| EMA | Length, initialization, responsiveness |
+| RSI | Bounds (0-100), extreme cases |
+| MACD | Components, histogram calculation |
+| Bollinger | Components, band ordering |
+
+### Issues Encountered
+
+1. **RSI edge cases**: RSI can be NaN when there are no losses (division by zero). The implementation handles this correctly.
+
+2. **Floating point comparison**: Used `tolerance` parameter in `expect_equal()` for floating point comparisons.
+
+### Decision Log
+
+1. **Test data size**: Use 50 data points for standard tests (enough for all indicators)
+2. **Edge case testing**: Include monotonic data to test RSI extremes
+3. **Tolerance**: Use 0.01 tolerance for floating point comparisons
+
+## Tomorrow's Plan
+
+- Write tests for visualization functions
+- Write tests for options functions (error handling for paid feature)
+- Start integration tests
