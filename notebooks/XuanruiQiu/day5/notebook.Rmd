@@ -1,0 +1,197 @@
+---
+title: "Day 5 Notebook - XuanruiQiu"
+author: "XuanruiQiu"
+date: "2026-01-29"
+output: html_document
+---
+
+## Today's Tasks
+
+- [x] Write package vignette with comprehensive examples
+- [x] Update zzz.R for Twelve Data API
+- [x] Final code review and documentation cleanup
+- [x] Coordinate with team for final integration
+
+## Work Summary
+
+### Completed Work
+
+Today I focused on documentation and final polish. I wrote a comprehensive vignette that demonstrates all package features, and updated the package initialization code to properly reference Twelve Data API.
+
+### Vignette Created
+
+**vignettes/rGoldETF-introduction.Rmd:**
+```r
+---
+title: "Introduction to rGoldETF"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to rGoldETF}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Getting Started
+
+### Installation
+
+\```r
+# Install from GitHub
+devtools::install_github("your-repo/rGoldETF")
+\```
+
+### API Setup
+
+This package uses the Twelve Data API. Get your free API key at https://twelvedata.com
+
+\```r
+library(rGoldETF)
+
+# Set your API key
+Sys.setenv(TWELVE_DATA_API_KEY = "your_api_key")
+# Or use:
+gld_set_api_key("your_api_key")
+\```
+
+## Basic Usage
+
+### Get Current Price
+
+\```r
+price <- get_gld_price()
+print(paste("GLD Price:", price$price))
+print(paste("Change:", price$change_percent, "%"))
+\```
+
+### Get Historical Data
+
+\```r
+history <- get_gld_history("2024-01-01", "2024-06-30")
+head(history)
+\```
+
+## Technical Analysis
+
+### Calculate Indicators
+
+\```r
+data <- get_technical_indicators(
+  history,
+  indicators = c("sma", "ema", "rsi", "macd", "bollinger"),
+  periods = list(sma = 20, ema = 12, rsi = 14)
+)
+\```
+
+### Visualize
+
+\```r
+# Line chart with moving averages
+plot_gld_chart(data, type = "line", indicators = c("sma", "ema"))
+
+# Candlestick chart
+plot_gld_chart(history, type = "candlestick", title = "GLD Candlestick Chart")
+\```
+
+## Extended Features
+
+### Gold Spot Price
+
+\```r
+gold <- get_gold_spot_price()
+print(paste("Gold Spot:", gold$price, "USD/oz"))
+\```
+
+### Compare ETFs
+
+\```r
+comparison <- compare_gold_etfs(
+  symbols = c("GLD", "IAU", "SGOL"),
+  start_date = "2024-01-01",
+  end_date = "2024-06-30"
+)
+\```
+```
+
+### Updated R/zzz.R
+
+```r
+#' @keywords internal
+"_PACKAGE"
+
+## usethis namespace: start
+#' @importFrom stats filter sd
+## usethis namespace: end
+NULL
+
+.onLoad <- function(libname, pkgname) {
+  op <- options()
+  op.rGoldETF <- list(
+    rGoldETF.api_url = "https://api.twelvedata.com"
+  )
+  toset <- !(names(op.rGoldETF) %in% names(op))
+  if (any(toset)) options(op.rGoldETF[toset])
+
+  invisible()
+}
+
+.onAttach <- function(libname, pkgname) {
+  packageStartupMessage("rGoldETF: Gold ETF Data Analysis and Visualization")
+  packageStartupMessage("Powered by Twelve Data API (https://twelvedata.com)")
+  packageStartupMessage("Set your API key with: Sys.setenv(TWELVE_DATA_API_KEY = 'your_key')")
+  packageStartupMessage("Or use: gld_set_api_key('your_key')")
+}
+```
+
+### Code Review Notes
+
+Reviewed all team code today:
+
+1. **YaojunLiu's api.R**: Clean implementation, good error handling
+2. **YaojunLiu's gold.R**: Extended functions work well
+3. **RuochenYang's tests**: Comprehensive coverage
+
+### Final Package Structure
+
+```
+rGoldETF/
+├── R/
+│   ├── api.R          # YaojunLiu - API core
+│   ├── price.R        # XuanruiQiu - Price functions
+│   ├── technical.R    # XuanruiQiu + YaojunLiu - Indicators
+│   ├── visualization.R # XuanruiQiu - Charts
+│   ├── gold.R         # YaojunLiu - Extended functions
+│   ├── options.R      # Placeholder (paid feature)
+│   └── zzz.R          # XuanruiQiu - Package init
+├── tests/testthat/    # RuochenYang - All tests
+├── vignettes/         # XuanruiQiu - Documentation
+└── man/               # Auto-generated
+```
+
+### Issues Encountered
+
+No major issues today. Minor documentation formatting fixes.
+
+### Decision Log
+
+1. **Vignette format**: Used standard R Markdown vignette format for CRAN compatibility
+2. **API key message**: Added helpful startup message with setup instructions
+
+## Project Complete!
+
+All planned features implemented:
+- ✅ Real-time price retrieval
+- ✅ Historical data retrieval
+- ✅ Technical indicators (SMA, EMA, RSI, MACD, Bollinger)
+- ✅ Price visualization (line and candlestick)
+- ✅ Gold spot price
+- ✅ ETF comparison
+- ✅ Symbol search
+- ✅ Market state
+
+## Team Contributions Summary
+
+| Member | Primary Contributions |
+|--------|----------------------|
+| XuanruiQiu | Package structure, price.R, visualization.R, vignette |
+| YaojunLiu | api.R, get_gld_history(), RSI/MACD/Bollinger, gold.R |
+| RuochenYang | Test framework, all test files, integration tests |
