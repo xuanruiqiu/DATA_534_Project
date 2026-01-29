@@ -383,8 +383,6 @@ test_that("Real API: plot_asset_comparison returns ggplot object", {
   start_date <- end_date - 14
 
   p <- plot_asset_comparison(
-    symbol1 = "GLD",
-    symbol2 = "IAU",
     start_date = format(start_date, "%Y-%m-%d"),
     end_date = format(end_date, "%Y-%m-%d")
   )
@@ -400,8 +398,6 @@ test_that("Real API: plot_asset_comparison has correct labels", {
   start_date <- end_date - 14
 
   p <- plot_asset_comparison(
-    symbol1 = "GLD",
-    symbol2 = "IAU",
     start_date = format(start_date, "%Y-%m-%d"),
     end_date = format(end_date, "%Y-%m-%d")
   )
@@ -411,26 +407,7 @@ test_that("Real API: plot_asset_comparison has correct labels", {
   expect_equal(p$labels$colour, "Asset")
 })
 
-test_that("Real API: plot_asset_comparison custom title", {
-  skip_if(Sys.getenv("TWELVE_DATA_API_KEY") == "", "Requires TWELVE_DATA_API_KEY")
-  .wait_for_api()
-
-  end_date <- Sys.Date() - 1
-  start_date <- end_date - 14
-
-  custom_title <- "My Custom Comparison"
-  p <- plot_asset_comparison(
-    symbol1 = "GLD",
-    symbol2 = "IAU",
-    start_date = format(start_date, "%Y-%m-%d"),
-    end_date = format(end_date, "%Y-%m-%d"),
-    title = custom_title
-  )
-
-  expect_equal(p$labels$title, custom_title)
-})
-
-test_that("Real API: plot_asset_comparison auto-generates title", {
+test_that("Real API: plot_asset_comparison has Gold vs Bitcoin title", {
   skip_if(Sys.getenv("TWELVE_DATA_API_KEY") == "", "Requires TWELVE_DATA_API_KEY")
   .wait_for_api()
 
@@ -438,12 +415,10 @@ test_that("Real API: plot_asset_comparison auto-generates title", {
   start_date <- end_date - 14
 
   p <- plot_asset_comparison(
-    symbol1 = "GLD",
-    symbol2 = "IAU",
     start_date = format(start_date, "%Y-%m-%d"),
     end_date = format(end_date, "%Y-%m-%d")
   )
 
-  expect_true(grepl("GLD", p$labels$title))
-  expect_true(grepl("IAU", p$labels$title))
+  expect_true(grepl("Gold", p$labels$title))
+  expect_true(grepl("Bitcoin", p$labels$title))
 })

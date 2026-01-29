@@ -2,45 +2,30 @@
 % Please edit documentation in R/visualization.R
 \name{plot_asset_comparison}
 \alias{plot_asset_comparison}
-\title{Plot Price Comparison Between Two Assets}
+\title{Plot Gold vs Bitcoin Price Comparison}
 \usage{
-plot_asset_comparison(
-  symbol1 = "XAU/USD",
-  symbol2 = "BTC/USD",
-  start_date,
-  end_date,
-  interval = "1day",
-  title = NULL
-)
+plot_asset_comparison(start_date, end_date, interval = "1day")
 }
 \arguments{
-\item{symbol1}{First asset symbol (default: "XAU/USD" for gold)}
-
-\item{symbol2}{Second asset symbol (default: "BTC/USD" for bitcoin)}
-
 \item{start_date}{Start date in "YYYY-MM-DD" format or Date object}
 
 \item{end_date}{End date in "YYYY-MM-DD" format or Date object}
 
 \item{interval}{Data interval: "1day", "1week", or "1month"}
-
-\item{title}{Chart title (auto-generated if NULL)}
 }
 \value{
 A ggplot object
 }
 \description{
-Creates a normalized price comparison chart for two assets.
+Creates a normalized price comparison chart for Gold (XAU/USD) and Bitcoin (BTC/USD).
 Prices are normalized to start at 100 for easy comparison.
 }
 \examples{
 \dontrun{
-# Default: Gold vs Bitcoin
+# Compare Gold vs Bitcoin for the last 30 days
 plot_asset_comparison(start_date = Sys.Date() - 30, end_date = Sys.Date())
 
-# Custom: GLD vs IAU
-plot_asset_comparison("GLD", "IAU",
-                      start_date = Sys.Date() - 30,
-                      end_date = Sys.Date())
+# Weekly comparison
+plot_asset_comparison(start_date = "2024-01-01", end_date = "2024-06-30", interval = "1week")
 }
 }

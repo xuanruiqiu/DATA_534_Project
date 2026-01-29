@@ -33,8 +33,12 @@ plot_gld_chart <- function(data,
   line_colors <- c("Price" = "steelblue", "SMA" = "orange", "EMA" = "purple",
                    "Bollinger Bands" = "gray")
 
+  # Track if we need color scale
+  has_color_aes <- FALSE
+
   if (type == "line") {
     p <- p + geom_line(aes(y = close, color = "Price"), linewidth = 0.8)
+    has_color_aes <- TRUE
   } else if (type == "candlestick") {
     p <- p +
       geom_segment(aes(x = date, xend = date, y = low, yend = high)) +
@@ -52,19 +56,24 @@ plot_gld_chart <- function(data,
   if (!is.null(indicators)) {
     if ("sma" %in% indicators && "sma" %in% names(data)) {
       p <- p + geom_line(aes(y = sma, color = "SMA"), linewidth = 0.6, na.rm = TRUE)
+      has_color_aes <- TRUE
     }
     if ("ema" %in% indicators && "ema" %in% names(data)) {
       p <- p + geom_line(aes(y = ema, color = "EMA"), linewidth = 0.6, na.rm = TRUE)
+      has_color_aes <- TRUE
     }
     if ("bb_upper" %in% names(data) && "bollinger" %in% indicators) {
       p <- p +
         geom_line(aes(y = bb_upper, color = "Bollinger Bands"), linetype = "dashed", na.rm = TRUE) +
         geom_line(aes(y = bb_lower, color = "Bollinger Bands"), linetype = "dashed", na.rm = TRUE)
+      has_color_aes <- TRUE
     }
   }
 
-  # Add color scale for legend
-  p <- p + scale_color_manual(values = line_colors)
+  # Add color scale for legend only if color aesthetic is used
+  if (has_color_aes) {
+    p <- p + scale_color_manual(values = line_colors)
+  }
 
   # Styling
   p <- p +
@@ -84,17 +93,14 @@ plot_gld_chart <- function(data,
   p
 }
 
-#' Plot Price Comparison Between Two Assets
+#' Plot Gold vs Bitcoin Price Comparison
 #'
-#' Creates a normalized price comparison chart for two assets.
+#' Creates a normalized price comparison chart for Gold (XAU/USD) and Bitcoin (BTC/USD).
 #' Prices are normalized to start at 100 for easy comparison.
 #'
-#' @param symbol1 First asset symbol (default: "XAU/USD" for gold)
-#' @param symbol2 Second asset symbol (default: "BTC/USD" for bitcoin)
 #' @param start_date Start date in "YYYY-MM-DD" format or Date object
 #' @param end_date End date in "YYYY-MM-DD" format or Date object
 #' @param interval Data interval: "1day", "1week", or "1month"
-#' @param title Chart title (auto-generated if NULL)
 #'
 #' @return A ggplot object
 #'
@@ -102,20 +108,20 @@ plot_gld_chart <- function(data,
 #' @import ggplot2
 #' @examples
 #' \dontrun{
-#' # Default: Gold vs Bitcoin
+#' # Compare Gold vs Bitcoin for the last 30 days
 #' plot_asset_comparison(start_date = Sys.Date() - 30, end_date = Sys.Date())
 #'
-#' # Custom: GLD vs IAU
-#' plot_asset_comparison("GLD", "IAU",
-#'                       start_date = Sys.Date() - 30,
-#'                       end_date = Sys.Date())
+#' # Weekly comparison
+#' plot_asset_comparison(start_date = "2024-01-01", end_date = "2024-06-30", interval = "1week")
 #' }
-plot_asset_comparison <- function(symbol1 = "XAU/USD",
-                                  symbol2 = "BTC/USD",
-                                  start_date,
+plot_asset_comparison <- function(start_date,
                                   end_date,
-                                  interval = "1day",
-                                  title = NULL) {
+                                  interval = "1day") {
+  # Fixed symbols: Gold and Bitcoin
+
+  symbol1 <- "XAU/USD"
+  symbol2 <- "BTC/USD"
+
   # Validate dates
   start_date <- as.character(as.Date(start_date))
   end_date <- as.character(as.Date(end_date))
@@ -157,22 +163,21 @@ plot_asset_comparison <- function(symbol1 = "XAU/USD",
   df2 <- process_data(data2, symbol2)
 
   if (is.null(df1) || is.null(df2)) {
-    stop("Failed to retrieve data for one or both symbols.")
+    stop("Failed to retrieve data for Gold or Bitcoin.")
   }
 
   # Combine data
   combined <- rbind(df1, df2)
 
-  # Generate title if not provided
-  if (is.null(title)) {
-    title <- paste(symbol1, "vs", symbol2, "- Normalized Price Comparison")
-  }
-
   # Create plot
   p <- ggplot(combined, aes(x = date, y = normalized, color = symbol)) +
     geom_line(linewidth = 0.8) +
+    scale_color_manual(
+      values = c("XAU/USD" = "gold3", "BTC/USD" = "orange"),
+      labels = c("XAU/USD" = "Gold", "BTC/USD" = "Bitcoin")
+    ) +
     labs(
-      title = title,
+      title = "Gold vs Bitcoin - Normalized Price Comparison",
       x = "Date",
       y = "Normalized Price (Start = 100)",
       color = "Asset"

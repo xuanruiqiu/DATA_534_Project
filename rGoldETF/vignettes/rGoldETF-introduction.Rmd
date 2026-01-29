@@ -388,29 +388,27 @@ p5 <- ggplot(comparison_demo, aes(x = date, y = normalized, color = symbol)) +
 print(p5)
 ```
 
-### Comparing Any Two Assets
+### Comparing Gold vs Bitcoin
 
-The `plot_asset_comparison()` function creates a normalized price comparison chart for any two assets:
+The `plot_asset_comparison()` function creates a normalized price comparison chart for Gold (XAU/USD) and Bitcoin (BTC/USD):
 
 ```{r plot-asset-comparison}
-# Compare Gold (XAU/USD) vs Bitcoin (BTC/USD) - default
+# Compare Gold vs Bitcoin for the last 30 days
 plot_asset_comparison(
   start_date = Sys.Date() - 30,
   end_date = Sys.Date()
 )
 
-# Compare two gold ETFs
+# Weekly comparison
 plot_asset_comparison(
-  symbol1 = "GLD",
-  symbol2 = "IAU",
   start_date = "2024-01-01",
   end_date = "2024-06-30",
-  title = "GLD vs IAU Performance"
+  interval = "1week"
 )
 ```
 
 ```{r plot-asset-comparison-demo, eval=TRUE, echo=TRUE}
-# Create sample comparison data for two assets
+# Create sample comparison data for Gold vs Bitcoin
 set.seed(456)
 dates <- seq(Sys.Date() - 29, Sys.Date(), by = "day")
 asset_comparison_demo <- data.frame(
@@ -424,8 +422,12 @@ asset_comparison_demo <- data.frame(
 
 p6 <- ggplot(asset_comparison_demo, aes(x = date, y = normalized, color = symbol)) +
   geom_line(linewidth = 0.8) +
+  scale_color_manual(
+    values = c("XAU/USD" = "gold3", "BTC/USD" = "orange"),
+    labels = c("XAU/USD" = "Gold", "BTC/USD" = "Bitcoin")
+  ) +
   labs(
-    title = "XAU/USD vs BTC/USD - Normalized Price Comparison",
+    title = "Gold vs Bitcoin - Normalized Price Comparison",
     x = "Date",
     y = "Normalized Price (Start = 100)",
     color = "Asset"
