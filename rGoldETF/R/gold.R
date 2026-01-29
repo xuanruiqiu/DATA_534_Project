@@ -143,10 +143,11 @@ get_etf_history <- function(symbol, start_date, end_date, interval = "1day") {
 #' @param symbols Vector of ETF symbols
 #' @param start_date Start date
 #' @param end_date End date
+#' @param delay Delay in seconds between API calls (default: 0)
 #' @return Data frame with normalized prices for comparison
 #' @export
 compare_gold_etfs <- function(symbols = c("GLD", "IAU", "SGOL"),
-                               start_date, end_date) {
+                               start_date, end_date, delay = 0) {
   result <- NULL
 
   for (sym in symbols) {
@@ -164,6 +165,7 @@ compare_gold_etfs <- function(symbols = c("GLD", "IAU", "SGOL"),
           result <- rbind(result, data)
         }
       }
+      if (delay > 0) Sys.sleep(delay)
     }, error = function(e) {
       warning(paste("Failed to fetch data for", sym))
     })

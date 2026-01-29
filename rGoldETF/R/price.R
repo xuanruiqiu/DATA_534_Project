@@ -1,3 +1,24 @@
+#' Get Current GLD Price
+#'
+#' Retrieves the current price for the GLD ETF from Twelve Data API.
+#'
+#' @return A list containing current price information
+#'
+#' @export
+get_gld_price <- function() {
+  response <- .api_request("quote", params = list(symbol = "GLD"))
+
+  list(
+    symbol = response$symbol,
+    name = response$name,
+    price = as.numeric(response$close),
+    change = as.numeric(response$change),
+    change_percent = as.numeric(response$percent_change),
+    volume = as.numeric(response$volume),
+    timestamp = as.POSIXct(as.numeric(response$timestamp), origin = "1970-01-01")
+  )
+}
+
 #' Get Historical GLD Data
 #'
 #' Retrieves historical price data for the GLD ETF from Twelve Data API.

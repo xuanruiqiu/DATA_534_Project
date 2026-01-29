@@ -29,14 +29,22 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck
+          extra-packages: |
+            any::rcmdcheck
+            any::roxygen2
+            any::devtools
           needs: check
           working-directory: rGoldETF
+
+      - name: Generate documentation
+        run: |
+          roxygen2::roxygenise("rGoldETF")
+        shell: Rscript {0}
 
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
           args: 'c("--no-manual", "--as-cran")'
-          build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
+          build_args: 'c("--no-manual")'
           error-on: '"error"'
           working-directory: rGoldETF

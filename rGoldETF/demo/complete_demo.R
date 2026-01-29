@@ -1,89 +1,85 @@
 # =============================================================================
-# rGoldETF 完整使用Demo
+# rGoldETF Complete Demo
 # =============================================================================
 
 # -----------------------------------------------------------------------------
-# 第一步：安装和加载包
+# Step 1: Load Package
 # -----------------------------------------------------------------------------
+# If not installed, install dependencies first
+# install.packages(c("httr", "jsonlite", "ggplot2"))
 
-# 如果还没安装，先安装依赖
-# install.packages(c("httr", "jsonlite", "ggplot2", "dplyr"))
-
-# 从本地安装包（在包目录的上级目录运行）
+# Install from local (run in parent directory of package)
 # devtools::install("rGoldETF")
 
-# 或者直接加载开发版本
+# Or load development version directly
 devtools::load_all(".")
 
 # -----------------------------------------------------------------------------
-# 第二步：设置API密钥和延时配置
+# Step 2: Set API Key and Delay Configuration
 # -----------------------------------------------------------------------------
-
-# 检查是否已设置API密钥，如果没有则提示用户设置
+# Check if API key is set, if not prompt user to set it
 if (Sys.getenv("TWELVE_DATA_API_KEY") == "") {
-  stop("请先设置API密钥：gld_set_api_key('your_api_key')\n",
-       "获取免费密钥：https://twelvedata.com/pricing")
+  stop("Please set API key first: gld_set_api_key('your_api_key')\n",
+       "Get free key at: https://twelvedata.com/pricing")
 }
 
-# API延时设置（免费版每分钟8次调用，设置8秒延时确保不超限）
-API_DELAY <- 8  # 秒
+# API delay setting (free tier allows 8 calls per minute, set 8 second delay)
+API_DELAY <- 8  # seconds
 
-# 延时辅助函数
+# Delay helper function
 api_wait <- function(seconds = API_DELAY) {
-  cat(sprintf("  [等待 %d 秒以避免API限制...]\n", seconds))
+  cat(sprintf("  [Waiting %d seconds to avoid API limit...]\n", seconds))
   Sys.sleep(seconds)
 }
 
-# 方法1：使用环境变量（推荐）
+# Method 1: Use environment variable (recommended)
 # Sys.setenv(TWELVE_DATA_API_KEY = "your_api_key_here")
 
-# 方法2：使用包函数
+# Method 2: Use package function
 # gld_set_api_key("your_api_key_here")
 
-# 获取免费API密钥：
-# 1. 访问 https://twelvedata.com/
-# 2. 点击 "Get Free API Key"
-# 3. 注册账号
-# 4. 在Dashboard中复制API Key
+# Get free API key:
+# 1. Visit https://twelvedata.com/
+# 2. Click "Get Free API Key"
+# 3. Register account
+# 4. Copy API Key from Dashboard
 
 cat("\n")
 cat("=============================================================\n")
-cat("  rGoldETF Demo - 免费版API每分钟限制8次调用\n")
-cat("  每次API调用后将等待", API_DELAY, "秒\n")
+cat("  rGoldETF Demo - Free API limited to 8 calls per minute\n")
+cat("  Will wait", API_DELAY, "seconds after each API call\n")
 cat("=============================================================\n")
 
 # -----------------------------------------------------------------------------
-# 第三步：获取实时价格
+# Step 3: Get Real-time Prices
 # -----------------------------------------------------------------------------
+cat("\n========== Real-time Prices ==========\n")
 
-cat("\n========== 实时价格 ==========\n")
-
-# 获取GLD ETF实时价格
-cat("\n1. 获取GLD实时价格...\n")
+# Get GLD ETF real-time price
+cat("\n1. Getting GLD real-time price...\n")
 gld_price <- get_gld_price()
 print(gld_price)
 api_wait()
 
-# 获取黄金现货价格
-cat("\n2. 获取黄金现货价格...\n")
+# Get gold spot price
+cat("\n2. Getting gold spot price...\n")
 gold_spot <- get_gold_spot_price()
 print(gold_spot)
 api_wait()
 
-# 获取其他黄金ETF价格
-cat("\n3. 获取IAU实时价格...\n")
+# Get other gold ETF prices
+cat("\n3. Getting IAU real-time price...\n")
 iau_price <- get_etf_price("IAU")  # iShares Gold Trust
 print(iau_price)
 api_wait()
 
 # -----------------------------------------------------------------------------
-# 第四步：获取历史数据
+# Step 4: Get Historical Data
 # -----------------------------------------------------------------------------
+cat("\n========== Historical Data ==========\n")
 
-cat("\n========== 历史数据 ==========\n")
-
-# 获取GLD最近30天历史数据
-cat("\n4. 获取GLD最近30天历史数据...\n")
+# Get GLD last 30 days historical data
+cat("\n4. Getting GLD last 30 days historical data...\n")
 gld_history <- get_gld_history(
   start_date = Sys.Date() - 30,
   end_date = Sys.Date()
@@ -91,8 +87,8 @@ gld_history <- get_gld_history(
 print(head(gld_history))
 api_wait()
 
-# 获取黄金现货历史数据
-cat("\n5. 获取黄金现货历史数据...\n")
+# Get gold spot historical data
+cat("\n5. Getting gold spot historical data...\n")
 gold_history <- get_gold_spot_history(
   start_date = "2024-01-01",
   end_date = "2024-01-31"
@@ -100,8 +96,8 @@ gold_history <- get_gold_spot_history(
 print(head(gold_history))
 api_wait()
 
-# 获取周线数据
-cat("\n6. 获取GLD周线数据...\n")
+# Get weekly data
+cat("\n6. Getting GLD weekly data...\n")
 gld_weekly <- get_gld_history(
   start_date = "2023-01-01",
   end_date = "2023-12-31",
@@ -111,21 +107,20 @@ print(head(gld_weekly))
 api_wait()
 
 # -----------------------------------------------------------------------------
-# 第五步：计算技术指标
+# Step 5: Calculate Technical Indicators
 # -----------------------------------------------------------------------------
+cat("\n========== Technical Indicators ==========\n")
 
-cat("\n========== 技术指标 ==========\n")
-
-# 获取足够的历史数据用于计算指标
-cat("\n7. 获取90天历史数据用于技术指标计算...\n")
+# Get enough historical data for indicator calculation
+cat("\n7. Getting 90 days historical data for technical indicators...\n")
 history_data <- get_gld_history(
   start_date = Sys.Date() - 90,
   end_date = Sys.Date()
 )
 api_wait()
 
-# 计算单个指标（本地计算，不消耗API）
-cat("\n计算SMA指标（本地计算）...\n")
+# Calculate single indicator (local calculation, no API call)
+cat("\nCalculating SMA indicator (local calculation)...\n")
 data_with_sma <- get_technical_indicators(
   history_data,
   indicators = "sma",
@@ -133,38 +128,37 @@ data_with_sma <- get_technical_indicators(
 )
 print(tail(data_with_sma[, c("date", "close", "sma")]))
 
-# 计算多个指标（本地计算，不消耗API）
-cat("\n计算多个技术指标（本地计算）...\n")
+# Calculate multiple indicators (local calculation, no API call)
+cat("\nCalculating multiple technical indicators (local calculation)...\n")
 data_with_indicators <- get_technical_indicators(
   history_data,
   indicators = c("sma", "ema", "rsi", "macd", "bollinger"),
   periods = list(sma = 20, ema = 12, rsi = 14)
 )
 
-# 查看结果
-cat("\n最近5天的技术指标：\n")
+# View results
+cat("\nLast 5 days technical indicators:\n")
 print(tail(data_with_indicators[, c("date", "close", "sma", "ema", "rsi")], 5))
 
-cat("\nMACD指标：\n")
+cat("\nMACD indicators:\n")
 print(tail(data_with_indicators[, c("date", "macd", "macd_signal", "macd_histogram")], 5))
 
-cat("\n布林带：\n")
+cat("\nBollinger Bands:\n")
 print(tail(data_with_indicators[, c("date", "close", "bb_upper", "bb_middle", "bb_lower")], 5))
 
 # -----------------------------------------------------------------------------
-# 第六步：可视化
+# Step 6: Visualization
 # -----------------------------------------------------------------------------
+cat("\n========== Visualization ==========\n")
+cat("(Visualization uses local data, no API calls)\n")
 
-cat("\n========== 可视化 ==========\n")
-cat("（可视化使用本地数据，不消耗API）\n")
-
-# 基础价格图
-cat("\n生成基础价格图...\n")
+# Basic price chart
+cat("\nGenerating basic price chart...\n")
 p1 <- plot_gld_chart(history_data, title = "GLD Price Chart")
 print(p1)
 
-# 带技术指标的图
-cat("\n生成带均线的图表...\n")
+# Chart with technical indicators
+cat("\nGenerating chart with moving averages...\n")
 p2 <- plot_gld_chart(
   data_with_indicators,
   type = "line",
@@ -173,8 +167,8 @@ p2 <- plot_gld_chart(
 )
 print(p2)
 
-# K线图（蜡烛图）
-cat("\n生成K线图...\n")
+# Candlestick chart
+cat("\nGenerating candlestick chart...\n")
 p3 <- plot_gld_chart(
   history_data,
   type = "candlestick",
@@ -182,8 +176,8 @@ p3 <- plot_gld_chart(
 )
 print(p3)
 
-# 带布林带的图
-cat("\n生成布林带图表...\n")
+# Chart with Bollinger Bands
+cat("\nGenerating Bollinger Bands chart...\n")
 p4 <- plot_gld_chart(
   data_with_indicators,
   type = "line",
@@ -193,108 +187,104 @@ p4 <- plot_gld_chart(
 print(p4)
 
 # -----------------------------------------------------------------------------
-# 第七步：比较多个ETF
+# Step 7: Compare Multiple ETFs
 # -----------------------------------------------------------------------------
+cat("\n========== ETF Comparison ==========\n")
 
-cat("\n========== ETF比较 ==========\n")
-
-# 比较多个黄金ETF（每个ETF需要一次API调用）
-cat("\n8-10. 比较多个黄金ETF（需要3次API调用，每次间隔8秒）...\n")
+# Compare multiple gold ETFs (each ETF requires one API call)
+cat("\n8-10. Comparing multiple gold ETFs (requires 3 API calls, 8 sec interval)...\n")
 comparison <- compare_gold_etfs(
   symbols = c("GLD", "IAU", "SGOL"),
   start_date = Sys.Date() - 30,
   end_date = Sys.Date(),
-  delay = API_DELAY  # 传递延时参数
+  delay = API_DELAY
 )
 print(head(comparison, 20))
 api_wait()
 
 # -----------------------------------------------------------------------------
-# 第八步：搜索黄金相关标的
+# Step 8: Search Gold-Related Symbols
 # -----------------------------------------------------------------------------
+cat("\n========== Search Function ==========\n")
 
-cat("\n========== 搜索功能 ==========\n")
-
-# 搜索黄金相关的股票/ETF
-cat("\n11. 搜索黄金相关标的...\n")
+# Search for gold-related stocks/ETFs
+cat("\n11. Searching gold-related symbols...\n")
 gold_symbols <- search_gold_symbols("gold")
 print(head(gold_symbols, 10))
 api_wait()
 
 # -----------------------------------------------------------------------------
-# 第九步：检查市场状态
+# Step 9: Check Market State
 # -----------------------------------------------------------------------------
+cat("\n========== Market State ==========\n")
 
-cat("\n========== 市场状态 ==========\n")
-
-# 检查美股市场状态
-cat("\n12. 检查NYSE市场状态...\n")
+# Check US stock market state
+cat("\n12. Checking NYSE market state...\n")
 market_state <- get_market_state("NYSE")
 print(market_state)
 api_wait()
 
 # -----------------------------------------------------------------------------
-# 第十步：完整分析示例
+# Step 10: Complete Analysis Example
 # -----------------------------------------------------------------------------
+cat("\n========== Complete Analysis Example ==========\n")
 
-cat("\n========== 完整分析示例 ==========\n")
-
-# 综合分析函数
+# Comprehensive analysis function
 analyze_gold <- function() {
-  # 1. 获取当前价格
-  cat("\n13. 获取当前GLD价格进行分析...\n")
+  # 1. Get current price
+  cat("\n13. Getting current GLD price for analysis...\n")
   current_price <- get_gld_price()
-  cat("当前GLD价格:", current_price$price, "\n")
-  cat("今日涨跌:", current_price$change, "(", current_price$change_percent, "%)\n\n")
+  cat("Current GLD price:", current_price$price, "\n")
+  cat("Today change:", current_price$change, "(", current_price$change_percent, "%)\n\n")
   api_wait()
 
-  # 2. 获取历史数据并计算指标
-  cat("14. 获取60天历史数据...\n")
+  # 2. Get historical data and calculate indicators
+  cat("14. Getting 60 days historical data...\n")
   history <- get_gld_history(
     start_date = Sys.Date() - 60,
     end_date = Sys.Date()
   )
   api_wait()
 
-  cat("计算技术指标（本地计算）...\n")
+  cat("Calculating technical indicators (local calculation)...\n")
   data <- get_technical_indicators(
     history,
     indicators = c("sma", "rsi", "macd")
   )
 
-  # 3. 获取最新指标值
+  # 3. Get latest indicator values
   latest <- tail(data, 1)
 
-  cat("技术分析：\n")
-  cat("- 20日均线:", round(latest$sma, 2), "\n")
+  cat("Technical Analysis:\n")
+  cat("- 20-day SMA:", round(latest$sma, 2), "\n")
   cat("- RSI(14):", round(latest$rsi, 2), "\n")
   cat("- MACD:", round(latest$macd, 4), "\n")
   cat("- MACD Signal:", round(latest$macd_signal, 4), "\n")
 
-  # 4. 简单信号判断
-  cat("\n信号判断：\n")
+  # 4. Simple signal judgment
+  cat("\nSignal Analysis:\n")
 
   if (latest$close > latest$sma) {
-    cat("- 价格在均线上方 (看涨)\n")
+    cat("- Price above SMA (Bullish)\n")
   } else {
-    cat("- 价格在均线下方 (看跌)\n")
+    cat("- Price below SMA (Bearish)\n")
   }
 
   if (latest$rsi > 70) {
-    cat("- RSI超买区域 (可能回调)\n")
+    cat("- RSI overbought zone (Possible pullback)\n")
   } else if (latest$rsi < 30) {
-    cat("- RSI超卖区域 (可能反弹)\n")
+    cat("- RSI oversold zone (Possible bounce)\n")
   } else {
-    cat("- RSI中性区域\n")
+    cat("- RSI neutral zone\n")
   }
 
   if (latest$macd > latest$macd_signal) {
-    cat("- MACD金叉 (看涨信号)\n")
+    cat("- MACD bullish crossover (Buy signal)\n")
   } else {
-    cat("- MACD死叉 (看跌信号)\n")
+    cat("- MACD bearish crossover (Sell signal)\n")
   }
 
-  # 5. 生成图表
+  # 5. Generate chart
   p <- plot_gld_chart(
     data,
     type = "line",
@@ -309,10 +299,10 @@ analyze_gold <- function() {
   ))
 }
 
-# 运行分析
+# Run analysis
 result <- analyze_gold()
 print(result$chart)
 
-cat("\n========== Demo完成 ==========\n")
-cat("总共进行了约14次API调用\n")
-cat("更多信息请查看包文档: ?rGoldETF\n")
+cat("\n========== Demo Complete ==========\n")
+cat("Total API calls: approximately 14\n")
+cat("For more information see package documentation: ?rGoldETF\n")

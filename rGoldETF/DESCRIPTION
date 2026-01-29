@@ -6,22 +6,19 @@ Authors@R: c(
     person("Yaojun", "Liu", email = "yaojun.liu@example.com", role = "aut"),
     person("Ruochen", "Yang", email = "ruochen.yang@example.com", role = "aut")
     )
+Author: Xuanrui Qiu [aut, cre], Yaojun Liu [aut], Ruochen Yang [aut]
+Maintainer: Xuanrui Qiu <xuanrui.qiu@example.com>
 Description: Provides tools for fetching, analyzing, and visualizing Gold ETF (GLD)
     data. Includes functions for retrieving price data, calculating technical
     indicators, analyzing options chains, and creating visualizations.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2
 Imports:
     httr,
     jsonlite,
-    ggplot2,
-    dplyr,
-    lubridate
+    ggplot2
 Suggests:
-    testthat (>= 3.0.0),
-    knitr,
-    rmarkdown
+    testthat (>= 3.0.0)
 Config/testthat/edition: 3
-VignetteBuilder: knitr
