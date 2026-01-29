@@ -8,6 +8,7 @@ rGoldETF is an R package for fetching, analyzing, and visualizing Gold ETF (GLD)
 - Fetching gold spot prices (XAU/USD)
 - Calculating technical indicators (SMA, EMA, RSI, MACD, Bollinger Bands)
 - Comparing multiple gold ETFs
+- Comparing Gold vs Bitcoin price trends
 - Creating professional visualizations
 
 ## Installation
@@ -91,7 +92,7 @@ plot_gld_chart(data_with_indicators, indicators = c("sma", "ema"))
 # Candlestick chart
 plot_gld_chart(history, type = "candlestick")
 
-# Compare two assets (default: Gold vs Bitcoin)
+# Compare Gold vs Bitcoin
 plot_asset_comparison(start_date = Sys.Date() - 30, end_date = Sys.Date())
 ```
 
