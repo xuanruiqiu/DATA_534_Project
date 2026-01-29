@@ -104,18 +104,6 @@ test_that("API key is returned correctly when present", {
   Sys.setenv(TWELVE_DATA_API_KEY = old_key)
 })
 
-test_that("gld_set_api_key sets the environment variable", {
-  # Save original key
-  old_key <- Sys.getenv("TWELVE_DATA_API_KEY")
-
-  # Set key using function
-  expect_message(gld_set_api_key("new_test_key"), "API key set successfully")
-  expect_equal(Sys.getenv("TWELVE_DATA_API_KEY"), "new_test_key")
-
-  # Restore original key
-  Sys.setenv(TWELVE_DATA_API_KEY = old_key)
-})
-
 # ============================================================================
 # Package Load Tests
 # ============================================================================

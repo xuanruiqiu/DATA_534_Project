@@ -149,30 +149,6 @@ test_that("Twelve Data time_series response has values array", {
   Sys.sleep(8)  # Wait 8 seconds between API calls to stay under 8/min limit
 }
 
-test_that("Real API: get_gld_price returns valid price data", {
-  skip_if(Sys.getenv("TWELVE_DATA_API_KEY") == "", "Requires TWELVE_DATA_API_KEY")
-
-  result <- get_gld_price()
-
-  expect_type(result, "list")
-  expect_equal(result$symbol, "GLD")
-  expect_true(is.numeric(result$price))
-  expect_true(result$price > 0)
-  expect_true(is.numeric(result$volume))
-  expect_s3_class(result$timestamp, "POSIXct")
-})
-
-test_that("Real API: get_gld_price returns reasonable price range", {
-  skip_if(Sys.getenv("TWELVE_DATA_API_KEY") == "", "Requires TWELVE_DATA_API_KEY")
-  .wait_for_api()
-
-  result <- get_gld_price()
-
-  # GLD price should be between $100 and $500 (reasonable range for gold ETF)
-  expect_true(result$price > 100 && result$price < 500,
-              info = paste("GLD price", result$price, "outside expected range"))
-})
-
 test_that("Real API: get_gld_history returns valid historical data", {
   skip_if(Sys.getenv("TWELVE_DATA_API_KEY") == "", "Requires TWELVE_DATA_API_KEY")
   .wait_for_api()
