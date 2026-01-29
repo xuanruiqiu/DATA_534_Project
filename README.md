@@ -90,6 +90,12 @@ plot_gld_chart(data_with_indicators, indicators = c("sma", "ema"))
 
 # Candlestick chart
 plot_gld_chart(history, type = "candlestick")
+
+# Compare two assets (default: Gold vs Bitcoin)
+plot_asset_comparison(start_date = Sys.Date() - 30, end_date = Sys.Date())
+
+# Compare custom assets
+plot_asset_comparison("GLD", "IAU", start_date = "2024-01-01", end_date = "2024-12-31")
 ```
 
 ### Compare ETFs
@@ -126,6 +132,7 @@ market_state <- get_market_state("NYSE")
 | `get_etf_history()` | Get any ETF historical data |
 | `get_technical_indicators()` | Calculate technical indicators |
 | `plot_gld_chart()` | Create price charts |
+| `plot_asset_comparison()` | Compare two assets with normalized prices |
 | `compare_gold_etfs()` | Compare multiple gold ETFs |
 | `search_gold_symbols()` | Search for gold-related symbols |
 | `get_market_state()` | Check market open/close status |

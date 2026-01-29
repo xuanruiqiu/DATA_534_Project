@@ -365,3 +365,85 @@ test_that("Real API: compare_gold_etfs returns valid data frame", {
   expect_true("symbol" %in% names(result))
   expect_true("normalized" %in% names(result))
 })
+
+# ============================================================================
+# Visualization Tests - plot_asset_comparison()
+# ============================================================================
+
+test_that("plot_asset_comparison function exists", {
+  expect_true(exists("plot_asset_comparison", where = asNamespace("rGoldETF")),
+              info = "Function plot_asset_comparison should exist")
+})
+
+test_that("Real API: plot_asset_comparison returns ggplot object", {
+  skip_if(Sys.getenv("TWELVE_DATA_API_KEY") == "", "Requires TWELVE_DATA_API_KEY")
+  .wait_for_api()
+
+  end_date <- Sys.Date() - 1
+  start_date <- end_date - 14
+
+  p <- plot_asset_comparison(
+    symbol1 = "GLD",
+    symbol2 = "IAU",
+    start_date = format(start_date, "%Y-%m-%d"),
+    end_date = format(end_date, "%Y-%m-%d")
+  )
+
+  expect_s3_class(p, "ggplot")
+})
+
+test_that("Real API: plot_asset_comparison has correct labels", {
+  skip_if(Sys.getenv("TWELVE_DATA_API_KEY") == "", "Requires TWELVE_DATA_API_KEY")
+  .wait_for_api()
+
+  end_date <- Sys.Date() - 1
+  start_date <- end_date - 14
+
+  p <- plot_asset_comparison(
+    symbol1 = "GLD",
+    symbol2 = "IAU",
+    start_date = format(start_date, "%Y-%m-%d"),
+    end_date = format(end_date, "%Y-%m-%d")
+  )
+
+  expect_equal(p$labels$x, "Date")
+  expect_equal(p$labels$y, "Normalized Price (Start = 100)")
+  expect_equal(p$labels$colour, "Asset")
+})
+
+test_that("Real API: plot_asset_comparison custom title", {
+  skip_if(Sys.getenv("TWELVE_DATA_API_KEY") == "", "Requires TWELVE_DATA_API_KEY")
+  .wait_for_api()
+
+  end_date <- Sys.Date() - 1
+  start_date <- end_date - 14
+
+  custom_title <- "My Custom Comparison"
+  p <- plot_asset_comparison(
+    symbol1 = "GLD",
+    symbol2 = "IAU",
+    start_date = format(start_date, "%Y-%m-%d"),
+    end_date = format(end_date, "%Y-%m-%d"),
+    title = custom_title
+  )
+
+  expect_equal(p$labels$title, custom_title)
+})
+
+test_that("Real API: plot_asset_comparison auto-generates title", {
+  skip_if(Sys.getenv("TWELVE_DATA_API_KEY") == "", "Requires TWELVE_DATA_API_KEY")
+  .wait_for_api()
+
+  end_date <- Sys.Date() - 1
+  start_date <- end_date - 14
+
+  p <- plot_asset_comparison(
+    symbol1 = "GLD",
+    symbol2 = "IAU",
+    start_date = format(start_date, "%Y-%m-%d"),
+    end_date = format(end_date, "%Y-%m-%d")
+  )
+
+  expect_true(grepl("GLD", p$labels$title))
+  expect_true(grepl("IAU", p$labels$title))
+})
